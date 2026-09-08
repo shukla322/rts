@@ -1,0 +1,254 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: 'Public Sans', system-ui, sans-serif;
+  background: #fffdf8;
+  color: #580b46;
+}
+
+.leaflet-container {
+  background: #fffdf8;
+  font-family: 'Public Sans', system-ui, sans-serif;
+}
+
+/* ---- Auction zone pulse: animates the rendered SVG path of the Leaflet Circle ---- */
+@keyframes zone-pulse {
+  0%,
+  100% {
+    fill-opacity: 0.18;
+    stroke-opacity: 0.55;
+  }
+  50% {
+    fill-opacity: 0.38;
+    stroke-opacity: 0.9;
+  }
+}
+
+/* Radius growth is driven in AuctionZone.tsx by animating the real Leaflet
+   radius value (see GROW_DURATION_MS) rather than a CSS transform — just
+   delay the pulse's start to match so it doesn't kick in mid-growth. */
+.auction-zone path {
+  animation: zone-pulse 2.2s ease-in-out 0.6s infinite;
+}
+
+/* ---- Node marker ----
+   The root is fixed at exactly the dot's 20x20 box so Leaflet's iconAnchor
+   ([10,10]) always lands on the dot's true center, regardless of how wide
+   the label/actions get — those are absolutely positioned off to the side
+   and never affect this box's size (which is what anchors the marker to
+   the geo point). Sizing the root by its widest child was what previously
+   dragged the anchor — and the whole marker — off to the right. */
+.hub-marker {
+  position: relative;
+  width: 20px;
+  height: 20px;
+  pointer-events: none;
+}
+
+.hub-marker-dot {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 9999px;
+  border: 3px solid #fffdf8;
+  background: #580b46;
+  box-shadow: 0 2px 8px rgba(88, 11, 70, 0.4);
+  pointer-events: auto;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hub-marker-callout {
+  position: absolute;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  white-space: nowrap;
+  background: #f9a8d4;
+  color: #580b46;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  padding: 10px 22px;
+  border-radius: 9999px;
+  box-shadow: 0 8px 20px rgba(88, 11, 70, 0.28);
+  animation: pop-in 0.3s ease-out;
+}
+
+.hub-marker-callout::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 10px solid transparent;
+  border-top-color: #f9a8d4;
+}
+
+.hub-marker-auction-callout {
+  position: absolute;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  white-space: nowrap;
+  background: var(--zone-color);
+  color: #580b46;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  padding: 10px 22px;
+  border-radius: 9999px;
+  box-shadow: 0 8px 20px rgba(88, 11, 70, 0.28);
+  animation: pop-in 0.3s ease-out;
+}
+
+.hub-marker-auction-callout::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 10px solid transparent;
+  border-top-color: var(--zone-color);
+}
+
+/* Stationary map mode: shrink the callouts back to their original compact
+   size, since the wider padded pills were sized for the closer, animated
+   Adaptive view. */
+.hub-marker-callout.is-compact,
+.hub-marker-auction-callout.is-compact {
+  font-size: 10px;
+  padding: 5px 11px;
+}
+
+.hub-marker-callout.is-compact::after,
+.hub-marker-auction-callout.is-compact::after {
+  border-width: 5px;
+}
+
+/* When a node is both the highlighted origin AND has a live auction (not
+   possible today given how auctionIndex/highlightedIndex are derived, but
+   kept defensive) stack the auction callout further out so they don't overlap. */
+.hub-marker.is-active .hub-marker-auction-callout {
+  bottom: 100px;
+}
+
+.hub-marker-info {
+  position: absolute;
+  top: 26px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.hub-marker.is-active .hub-marker-dot {
+  background: #f9a8d4;
+  transform: scale(1.25);
+  animation: active-glow 1.8s ease-in-out infinite;
+}
+
+@keyframes active-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(249, 168, 212, 0.55);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(249, 168, 212, 0);
+  }
+}
+
+.hub-marker-label {
+  pointer-events: auto;
+  background: #fffdf8;
+  border: 1.5px solid rgba(88, 11, 70, 0.15);
+  border-radius: 9999px;
+  padding: 2px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #580b46;
+  box-shadow: 0 2px 6px rgba(88, 11, 70, 0.18);
+  white-space: nowrap;
+}
+
+.hub-marker-city {
+  font-size: 9px;
+  font-weight: 500;
+  opacity: 0.7;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.hub-actions {
+  pointer-events: auto;
+  margin-top: 2px;
+  display: flex;
+  gap: 4px;
+  animation: pop-in 0.3s ease-out;
+}
+
+.hub-action-btn {
+  border: none;
+  cursor: pointer;
+  font-family: 'Public Sans', system-ui, sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 4px 9px;
+  border-radius: 9999px;
+  white-space: nowrap;
+  transition: transform 0.15s ease;
+  animation: btn-pulse 1.6s ease-in-out infinite;
+}
+
+.hub-action-btn:hover {
+  transform: scale(1.08);
+}
+
+.hub-action-sold {
+  background: #e3f6e1;
+  color: #1f7a1f;
+  border: 1.5px solid #8bc98a;
+}
+
+.hub-action-not-sold {
+  background: #fbe4e2;
+  color: #a13b36;
+  border: 1.5px solid #e2534d;
+}
+
+@keyframes btn-pulse {
+  0%,
+  100% {
+    box-shadow: 0 3px 8px rgba(88, 11, 70, 0.18);
+  }
+  50% {
+    box-shadow: 0 3px 12px rgba(88, 11, 70, 0.32);
+  }
+}
+
+@keyframes pop-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.8) translateY(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
