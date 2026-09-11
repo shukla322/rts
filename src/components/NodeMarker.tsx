@@ -33,7 +33,7 @@ export default function NodeMarker({
           ${isActive ? `<div class="${calloutClass}">RTO Product Here</div>` : ''}
           ${
             auctionHex
-              ? `<div class="${auctionCalloutClass}" style="--zone-color: ${auctionHex}">Auction Here</div>`
+              ? `<div class="${auctionCalloutClass}" style="--zone-color: ${auctionHex}">Boosting Here</div>`
               : ''
           }
           <span class="hub-marker-dot"></span>

@@ -39,7 +39,7 @@
 - **Stationary mode**: camera fixed on the whole route, never auto-moves
 - Auction-zone circle is hidden while the camera is mid-flight (`mapFlying` state) to avoid a Leaflet rendering glitch (Path geometry changing concurrently with a zoom animation renders clipped until `moveend`), then grows in from radius 0 → 200,000m via `requestAnimationFrame` once settled
 - Node markers use a fixed-size anchor box with absolutely-positioned label/actions/callouts (`hub-marker-info`, `hub-marker-callout`, `hub-marker-auction-callout`) so Leaflet's `iconAnchor` never drifts off the true geo point regardless of label width
-- "RTO Product Here" callout on the highlighted node; "Auction Here" callout (zone-colored) on the live auction node; both shrink to a compact size in Stationary mode
+- "RTO Product Here" callout on the highlighted node; "Boosting Here" callout (zone-colored) on the live auction node; both shrink to a compact size in Stationary mode
 
 ## End-of-simulation modal (`EndScreen.tsx`)
 - Bought: "Someone in `<city>` bought the product" / "To be delivered in 2 days." / "Valmo saves `<X>`% (₹`<Y>`) off the original Reverse Logistics Costs."
