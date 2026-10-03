@@ -70,19 +70,19 @@ body {
 
 .hub-marker-callout {
   position: absolute;
-  bottom: 28px;
+  bottom: 24px;
   left: 50%;
   transform: translateX(-50%);
   pointer-events: none;
   white-space: nowrap;
   background: #f9a8d4;
   color: #580b46;
-  font-size: 15px;
+  font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.02em;
-  padding: 10px 22px;
+  padding: 4px 10px;
   border-radius: 9999px;
-  box-shadow: 0 8px 20px rgba(88, 11, 70, 0.28);
+  box-shadow: 0 4px 10px rgba(88, 11, 70, 0.25);
   animation: pop-in 0.3s ease-out;
 }
 
@@ -92,57 +92,19 @@ body {
   top: 100%;
   left: 50%;
   transform: translateX(-50%);
-  border: 10px solid transparent;
+  border: 5px solid transparent;
   border-top-color: #f9a8d4;
 }
 
-.hub-marker-auction-callout {
-  position: absolute;
-  bottom: 28px;
-  left: 50%;
-  transform: translateX(-50%);
-  pointer-events: none;
-  white-space: nowrap;
-  background: var(--zone-color);
-  color: #580b46;
-  font-size: 15px;
-  font-weight: 800;
-  letter-spacing: 0.02em;
-  padding: 10px 22px;
-  border-radius: 9999px;
-  box-shadow: 0 8px 20px rgba(88, 11, 70, 0.28);
-  animation: pop-in 0.3s ease-out;
+/* Stationary map mode: shrink the callout even further for the wider,
+   less-zoomed view. */
+.hub-marker-callout.is-compact {
+  font-size: 8px;
+  padding: 3px 8px;
 }
 
-.hub-marker-auction-callout::after {
-  content: '';
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  border: 10px solid transparent;
-  border-top-color: var(--zone-color);
-}
-
-/* Stationary map mode: shrink the callouts back to their original compact
-   size, since the wider padded pills were sized for the closer, animated
-   Adaptive view. */
-.hub-marker-callout.is-compact,
-.hub-marker-auction-callout.is-compact {
-  font-size: 10px;
-  padding: 5px 11px;
-}
-
-.hub-marker-callout.is-compact::after,
-.hub-marker-auction-callout.is-compact::after {
-  border-width: 5px;
-}
-
-/* When a node is both the highlighted origin AND has a live auction (not
-   possible today given how auctionIndex/highlightedIndex are derived, but
-   kept defensive) stack the auction callout further out so they don't overlap. */
-.hub-marker.is-active .hub-marker-auction-callout {
-  bottom: 100px;
+.hub-marker-callout.is-compact::after {
+  border-width: 4px;
 }
 
 .hub-marker-info {
@@ -251,4 +213,138 @@ body {
     opacity: 1;
     transform: scale(1) translateY(0);
   }
+}
+
+/* ---- Refused LMDH marker (Layer 1): inert, red, no actions ---- */
+.hub-marker.is-refused .hub-marker-dot {
+  background: #e2534d;
+  border-color: #fffdf8;
+}
+
+.hub-marker-refused-callout {
+  background: #e2534d;
+  color: #fffdf8;
+}
+
+.hub-marker-refused-callout::after {
+  border-top-color: #e2534d;
+}
+
+/* ---- Major node marker: the always-visible 14-node network, clickable
+   only while choosing SSC/DSC. Deliberately smaller/plainer than .hub-marker
+   since most of the time it's just background context. ---- */
+.major-marker {
+  position: relative;
+  width: 16px;
+  height: 16px;
+  pointer-events: none;
+}
+
+.major-marker-dot {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 16px;
+  height: 16px;
+  border-radius: 9999px;
+  border: 2.5px solid #fffdf8;
+  background: #580b46;
+  opacity: 0.55;
+  box-shadow: 0 2px 6px rgba(88, 11, 70, 0.3);
+  pointer-events: auto;
+  transition: transform 0.2s ease, opacity 0.2s ease, background 0.2s ease;
+}
+
+.major-marker.is-clickable .major-marker-dot {
+  opacity: 1;
+  cursor: pointer;
+}
+
+.major-marker.is-clickable .major-marker-dot:hover {
+  transform: scale(1.2);
+}
+
+.major-marker-idle .major-marker-dot {
+  opacity: 1;
+}
+
+.major-marker-ssc .major-marker-dot,
+.major-marker-dsc .major-marker-dot {
+  background: #fe9c00;
+  opacity: 1;
+  transform: scale(1.3);
+}
+
+.major-marker-info {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.major-marker-tag-pill {
+  display: inline-block;
+  background: #fe9c00;
+  border-radius: 9999px;
+  padding: 1px 7px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #580b46;
+  white-space: nowrap;
+  box-shadow: 0 2px 5px rgba(88, 11, 70, 0.25);
+}
+
+/* ---- Phone touch targets ----
+   Marker dots double as tap targets, so on phones (where the JS also
+   requests a bigger iconSize/iconAnchor to match) every offset that was
+   measured against the desktop box size scales up with it. */
+.hub-marker.is-mobile {
+  width: 30px;
+  height: 30px;
+}
+
+.hub-marker.is-mobile .hub-marker-dot {
+  width: 30px;
+  height: 30px;
+  border-width: 4px;
+}
+
+.hub-marker.is-mobile .hub-marker-info {
+  top: 36px;
+}
+
+.hub-marker.is-mobile .hub-marker-callout {
+  bottom: 34px;
+}
+
+.hub-marker.is-mobile .hub-marker-label {
+  padding: 4px 12px;
+  font-size: 13px;
+}
+
+.hub-marker.is-mobile .hub-action-btn {
+  padding: 8px 14px;
+  font-size: 13px;
+}
+
+.major-marker.is-mobile {
+  width: 26px;
+  height: 26px;
+}
+
+.major-marker.is-mobile .major-marker-dot {
+  width: 26px;
+  height: 26px;
+  border-width: 3px;
+}
+
+.major-marker.is-mobile .major-marker-info {
+  top: 30px;
+}
+
+.major-marker.is-mobile .major-marker-tag-pill {
+  font-size: 11px;
+  padding: 2px 9px;
 }

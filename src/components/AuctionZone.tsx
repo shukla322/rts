@@ -5,12 +5,13 @@ import { ZONE_COLOR_HEX, type HubNode, type ZoneColor } from '../data/nodes'
 interface Props {
   node: HubNode
   color: ZoneColor
+  radiusMeters?: number
 }
 
-const ZONE_RADIUS_METERS = 200000
+const DEFAULT_ZONE_RADIUS_METERS = 200000
 const GROW_DURATION_MS = 600
 
-export default function AuctionZone({ node, color }: Props) {
+export default function AuctionZone({ node, color, radiusMeters = DEFAULT_ZONE_RADIUS_METERS }: Props) {
   const hex = ZONE_COLOR_HEX[color]
   const [radius, setRadius] = useState(0)
 
@@ -27,13 +28,13 @@ export default function AuctionZone({ node, color }: Props) {
     const tick = (now: number) => {
       const t = Math.min((now - start) / GROW_DURATION_MS, 1)
       const eased = 1 - (1 - t) ** 3
-      setRadius(ZONE_RADIUS_METERS * eased)
+      setRadius(radiusMeters * eased)
       if (t < 1) frame = requestAnimationFrame(tick)
     }
     frame = requestAnimationFrame(tick)
 
     return () => cancelAnimationFrame(frame)
-  }, [node.id])
+  }, [node.id, radiusMeters])
 
   return (
     <Circle

@@ -20,8 +20,16 @@ export const DEFAULT_PRICING_CONFIG: PricingConfig = {
   margin: DEFAULT_MARGIN,
 }
 
-// Position 1..4 within any 5-city route (0 is always LMDH, never auctioned).
+// Position 1..4 within a layer-3 chain (0 is always the DSC, never auctioned
+// there directly — layer 3 starts at position 1, same as the old pipeline).
 export const ZONE_COLORS_BY_POSITION: ZoneColor[] = ['green', 'yellow', 'orange', 'red']
+
+// Layer 2 ("nation-wide boosting"): flat discount, no formula.
+export const LAYER2_DISCOUNT = 0.15
+
+export function getLayer2Price(config: PricingConfig): number {
+  return config.totalPrice * (1 - LAYER2_DISCOUNT)
+}
 
 export interface PricingBreakdown {
   remainingEdges: number

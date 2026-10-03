@@ -1,22 +1,20 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import type { SimStatus } from '../state/useSimulation'
 import { getPricingForNode, type PricingConfig } from '../data/pricing'
-import type { HubNode } from '../data/nodes'
+import type { SimState } from '../state/useSimulation'
 
 interface Props {
-  status: SimStatus
-  auctionIndex: number | null
-  lastIndex: number
+  state: SimState
   pricingConfig: PricingConfig
-  node: HubNode | null
   onReset: () => void
 }
 
-export default function EndScreen({ status, auctionIndex, lastIndex, pricingConfig, node, onReset }: Props) {
-  const open = status === 'bought' || status === 'unsold'
+export default function EndScreen({ state, pricingConfig, onReset }: Props) {
+  const { phase, boughtAt } = state
+  const open = phase === 'bought' || phase === 'unsold'
+
   const pricing =
-    status === 'bought' && auctionIndex !== null
-      ? getPricingForNode(auctionIndex, lastIndex, pricingConfig)
+    phase === 'bought' && boughtAt?.layer === 3 && state.auctionIndex !== null
+      ? getPricingForNode(state.auctionIndex, state.layer3Path.length - 1, pricingConfig)
       : null
 
   return (
@@ -36,15 +34,15 @@ export default function EndScreen({ status, auctionIndex, lastIndex, pricingConf
             transition={{ type: 'spring', stiffness: 300, damping: 26 }}
           >
             <div className="mx-auto h-16 w-16 rounded-full bg-bg-beige flex items-center justify-center text-3xl">
-              {status === 'bought' ? '✅' : '↩️'}
+              {phase === 'bought' ? '✅' : '↩️'}
             </div>
             <h2 className="mt-4 font-display font-bold text-lg text-header-purple">
-              {status === 'bought'
-                ? `Someone in ${node?.city ?? 'transit'} bought the product`
+              {phase === 'bought'
+                ? `Someone in ${boughtAt?.city ?? 'transit'} bought the product`
                 : 'Return Completed'}
             </h2>
             <p className="mt-2 text-sm text-header-purple/70">
-              {status === 'bought'
+              {phase === 'bought'
                 ? 'To be delivered in 2 days.'
                 : 'No buyer along the way — the item has been sent back to origin, unsold.'}
             </p>

@@ -5,56 +5,42 @@ import MapStage from './components/MapStage'
 import PricingCard from './components/PricingCard'
 import EndScreen from './components/EndScreen'
 import { useSimulation } from './state/useSimulation'
-import { getRoute } from './data/routes'
 import { DEFAULT_PRICING_CONFIG, type PricingConfig } from './data/pricing'
 
 export default function App() {
-  const { state, selectRoute, runSimulation, sold, notSold, reset } = useSimulation()
+  const { state, selectSsc, selectDsc, buy, notSold, skipLayer, reset } = useSimulation()
   const [pricingConfig, setPricingConfig] = useState<PricingConfig>(DEFAULT_PRICING_CONFIG)
 
-  const route = getRoute(state.routeId)
-  const lastIndex = route.cities.length - 1
-  const pricingNodeIndex = state.status === 'idle' ? null : state.auctionIndex
-  const pricingNode = pricingNodeIndex !== null ? route.cities[pricingNodeIndex] : null
-
   return (
-    <div className="h-screen w-screen flex flex-col bg-bg-white overflow-hidden">
-      <Header simulationVisible={state.status === 'idle'} onRunSimulation={runSimulation} />
+    <div className="h-screen w-screen flex flex-col bg-bg-white overflow-y-auto md:overflow-hidden">
+      <Header />
 
-      <div className="flex-1 flex min-h-0">
+      <div className="flex-1 flex flex-col md:flex-row md:min-h-0">
         <Sidebar
-          activeRouteId={state.routeId}
-          onSelect={selectRoute}
+          state={state}
+          onReset={reset}
           pricingConfig={pricingConfig}
           onPricingConfigChange={setPricingConfig}
-          totalEdges={lastIndex}
-          edgesTraversed={state.highlightedIndex}
         />
 
         <div className="flex-1 flex flex-col min-w-0">
-          <div className="flex-1 flex min-h-0">
+          <div className="flex-1 flex flex-col md:flex-row md:min-h-0">
+            {/* On phones the map — the actual interaction — comes before the
+                pricing card, which is supplementary reading. */}
             <PricingCard
-              node={pricingNode}
-              nodeIndex={pricingNodeIndex}
-              lastIndex={lastIndex}
+              state={state}
               pricingConfig={pricingConfig}
-              auctionLive={state.status === 'auction-live'}
-              onSold={sold}
+              onBuy={buy}
               onNotSold={notSold}
+              onSkipLayer={skipLayer}
+              className="order-last md:order-none"
             />
-            <MapStage route={route} state={state} onSold={sold} onNotSold={notSold} />
+            <MapStage state={state} onSelectSsc={selectSsc} onSelectDsc={selectDsc} onBuy={buy} onNotSold={notSold} />
           </div>
         </div>
       </div>
 
-      <EndScreen
-        status={state.status}
-        auctionIndex={state.auctionIndex}
-        lastIndex={lastIndex}
-        pricingConfig={pricingConfig}
-        node={pricingNode}
-        onReset={reset}
-      />
+      <EndScreen state={state} pricingConfig={pricingConfig} onReset={reset} />
     </div>
   )
 }

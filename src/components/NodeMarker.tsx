@@ -1,66 +1,81 @@
 import { useMemo } from 'react'
 import { Marker } from 'react-leaflet'
 import L, { type LeafletMouseEvent } from 'leaflet'
-import { ZONE_COLOR_HEX, type HubNode, type ZoneColor } from '../data/nodes'
+import type { HubNode } from '../data/nodes'
+import { useIsMobile } from '../hooks/useIsMobile'
 
 interface Props {
   node: HubNode
+  label: string
   isActive: boolean
   showActions: boolean
-  auctionColor: ZoneColor | null
   compactCallouts: boolean
+  refused?: boolean
+  hideLabel?: boolean
+  hideNotSold?: boolean
   onSold: () => void
   onNotSold: () => void
 }
 
 export default function NodeMarker({
   node,
+  label,
   isActive,
   showActions,
-  auctionColor,
   compactCallouts,
+  refused = false,
+  hideLabel = false,
+  hideNotSold = false,
   onSold,
   onNotSold,
 }: Props) {
+  const isMobile = useIsMobile()
+
   const icon = useMemo(() => {
-    const auctionHex = auctionColor ? ZONE_COLOR_HEX[auctionColor].fill : null
     const calloutClass = `hub-marker-callout${compactCallouts ? ' is-compact' : ''}`
-    const auctionCalloutClass = `hub-marker-auction-callout${compactCallouts ? ' is-compact' : ''}`
+    // On phones, the dot doubles as the tap target, so it needs to be
+    // meaningfully bigger than the 20px desktop size to stay comfortably
+    // tappable — the box is always sized to match exactly (see below).
+    const size = isMobile ? 30 : 20
     return L.divIcon({
       className: '',
       html: `
-        <div class="hub-marker ${isActive ? 'is-active' : ''}">
+        <div class="hub-marker ${isMobile ? 'is-mobile' : ''} ${isActive ? 'is-active' : ''} ${refused ? 'is-refused' : ''}">
           ${isActive ? `<div class="${calloutClass}">RTO Product Here</div>` : ''}
-          ${
-            auctionHex
-              ? `<div class="${auctionCalloutClass}" style="--zone-color: ${auctionHex}">Boosting Here</div>`
-              : ''
-          }
+          ${refused ? `<div class="${calloutClass} hub-marker-refused-callout">Refused</div>` : ''}
           <span class="hub-marker-dot"></span>
           <div class="hub-marker-info">
-            <span class="hub-marker-label">
-              ${node.id}
-              <span class="hub-marker-city">${node.city}</span>
-            </span>
+            ${
+              hideLabel
+                ? ''
+                : `<span class="hub-marker-label">
+                     ${label}
+                     <span class="hub-marker-city">${node.city}</span>
+                   </span>`
+            }
             ${
               showActions
                 ? `<div class="hub-actions">
                      <button type="button" class="hub-action-btn hub-action-sold">Sold</button>
-                     <button type="button" class="hub-action-btn hub-action-not-sold">Not Sold</button>
+                     ${
+                       hideNotSold
+                         ? ''
+                         : '<button type="button" class="hub-action-btn hub-action-not-sold">Not Sold</button>'
+                     }
                    </div>`
                 : ''
             }
           </div>
         </div>
       `,
-      // Fixed 20x20 box matching the dot exactly — the label/actions are
-      // absolutely positioned off to the side (see .hub-marker-info), so
+      // The box is always sized to match the dot exactly — the label/actions
+      // are absolutely positioned off to the side (see .hub-marker-info), so
       // they never grow this box and skew the anchor away from the pin.
-      iconSize: [20, 20],
-      iconAnchor: [10, 10],
+      iconSize: [size, size],
+      iconAnchor: [size / 2, size / 2],
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [node, isActive, showActions, auctionColor, compactCallouts])
+  }, [node, label, isActive, showActions, compactCallouts, refused, hideLabel, hideNotSold, isMobile])
 
   const handleClick = (e: LeafletMouseEvent) => {
     const target = e.originalEvent.target as HTMLElement

@@ -1,12 +1,17 @@
 import { Polyline } from 'react-leaflet'
-import type { HubNode } from '../data/nodes'
 
-interface Props {
-  cities: HubNode[]
+interface Point {
+  lat: number
+  lng: number
 }
 
-export default function PipelineEdges({ cities }: Props) {
-  const positions = cities.map((n) => [n.lat, n.lng] as [number, number])
+interface Props {
+  points: Point[]
+  dashed?: boolean
+}
+
+export default function PipelineEdges({ points, dashed = true }: Props) {
+  const positions = points.map((n) => [n.lat, n.lng] as [number, number])
 
   return (
     <Polyline
@@ -15,7 +20,7 @@ export default function PipelineEdges({ cities }: Props) {
         color: '#580b46',
         weight: 3,
         opacity: 0.45,
-        dashArray: '2 10',
+        dashArray: dashed ? '2 10' : undefined,
         lineCap: 'round',
       }}
     />
