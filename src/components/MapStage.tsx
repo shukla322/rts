@@ -14,7 +14,11 @@ import PipelineEdges from './PipelineEdges'
 import AuctionZone from './AuctionZone'
 import NodeMarker from './NodeMarker'
 import MajorNodeMarker, { type MajorRole } from './MajorNodeMarker'
-import type { BoughtNode, SimState } from '../state/useSimulation'
+import type { SimState } from '../state/useSimulation'
+import type { CategoryId } from '../data/types'
+import { BOOST_REASON_META, getLayer2Bidders } from '../engine/boostReasons'
+import NodePopup from './NodePopup'
+import { Segmented } from './ui'
 
 type FocusMode = 'adaptive' | 'stationary'
 
@@ -95,7 +99,14 @@ function MapFocus({
       map.flyTo([points[0].lat, points[0].lng], 6, { duration: 1.1 })
     } else {
       const bounds = L.latLngBounds(points.map((p) => [p.lat, p.lng] as [number, number]))
-      map.flyToBounds(bounds, { padding: [60, 60], duration: 1.1 })
+      // Tight padding for the whole-network views (page open, Layer 2) so they
+      // sit closer in; the other phases keep the roomier frame.
+      const wholeNetwork = mode === 'stationary' || state.phase === 'select-ssc' || state.phase === 'select-dsc'
+      // Layer 3 frames just two hops, so it gets generous padding and a zoom cap
+      // to stop short legs from zooming in too far on every move.
+      const layer3 = state.phase === 'layer3'
+      const pad = wholeNetwork ? 12 : state.phase === 'layer2' ? 36 : layer3 ? 150 : 60
+      map.flyToBounds(bounds, { padding: [pad, pad], maxZoom: layer3 ? 6 : undefined, duration: 1.1 })
     }
 
     const handleMoveEnd = () => onFlyingChange(false)
@@ -110,45 +121,42 @@ function MapFocus({
   return null
 }
 
+/** Camera mode switch, floating over the top-right of the map. */
 function FocusModeToggle({ mode, onChange }: { mode: FocusMode; onChange: (mode: FocusMode) => void }) {
   return (
-    <div className="absolute top-3 right-3 z-[1000] flex gap-1 rounded-full bg-bg-white p-1 shadow-card">
-      {(['adaptive', 'stationary'] as const).map((option) => {
-        const active = mode === option
-        return (
-          <button
-            key={option}
-            type="button"
-            onClick={() => onChange(option)}
-            className={`px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wide transition-colors ${
-              active ? 'bg-highlight-orange text-header-purple' : 'text-header-purple/50 hover:text-header-purple'
-            }`}
-          >
-            {option === 'adaptive' ? 'Adaptive' : 'Stationary'}
-          </button>
-        )
-      })}
-    </div>
+    <Segmented
+      className="absolute top-3 right-3 z-[1000]"
+      ariaLabel="Map camera"
+      value={mode}
+      onChange={onChange}
+      options={[
+        { value: 'adaptive', label: 'Adaptive' },
+        { value: 'stationary', label: 'Stationary' },
+      ]}
+    />
   )
 }
 
 interface Props {
   state: SimState
-  onSelectSsc: (id: MajorNodeId) => void
-  onSelectDsc: (id: MajorNodeId) => void
-  onBuy: (node: BoughtNode) => void
-  onNotSold: (id: string) => void
+  categoryId: CategoryId
+  onUseAsSource: (id: MajorNodeId) => void
+  onUseAsDestination: (id: MajorNodeId) => void
 }
 
-export default function MapStage({ state, onSelectSsc, onSelectDsc, onBuy, onNotSold }: Props) {
+export default function MapStage({ state, categoryId, onUseAsSource, onUseAsDestination }: Props) {
   const [focusMode, setFocusMode] = useState<FocusMode>('adaptive')
   const [mapFlying, setMapFlying] = useState(false)
   const compactCallouts = focusMode === 'stationary'
+  const [popupNodeId, setPopupNodeId] = useState<MajorNodeId | null>(null)
 
-  const handleMajorClick = (id: MajorNodeId) => {
-    if (state.phase === 'select-ssc') onSelectSsc(id)
-    else if (state.phase === 'select-dsc') onSelectDsc(id)
-  }
+  // Layer 2 boost badge per qualifying node, for this product's category.
+  const boostBadges = useMemo(() => {
+    if (!state.sscId || !state.dscId) return {}
+    return Object.fromEntries(
+      getLayer2Bidders(state.sscId, state.dscId, categoryId).map((b) => [b.id, BOOST_REASON_META[b.primary]]),
+    )
+  }, [state.sscId, state.dscId, categoryId])
 
   const lmdhs = state.phase === 'layer1' && state.dscId ? getLmdhsForMajor(state.dscId) : null
 
@@ -158,13 +166,16 @@ export default function MapStage({ state, onSelectSsc, onSelectDsc, onBuy, onNot
   }, [state.sscId, state.dscId])
 
   return (
-    <div className="h-[60vh] md:h-full md:flex-1 min-h-0 relative">
+    <div className="h-[60vh] md:h-full md:flex-1 min-h-0 md:min-w-0 relative">
       <FocusModeToggle mode={focusMode} onChange={setFocusMode} />
       <MapContainer
         center={[21, 82]}
         zoom={5}
         minZoom={3}
         maxZoom={9}
+        // Quarter-step zoom so fitted views land snugly instead of rounding
+        // down to the next whole zoom level.
+        zoomSnap={0.25}
         scrollWheelZoom
         className="h-full w-full"
         // Leaflet's own touch "tap" handling (a workaround for an old mobile
@@ -194,16 +205,14 @@ export default function MapStage({ state, onSelectSsc, onSelectDsc, onBuy, onNot
                 : state.phase === 'select-ssc' || state.phase === 'select-dsc'
                   ? 'idle'
                   : 'context'
-          const clickable =
-            state.phase === 'select-ssc' || (state.phase === 'select-dsc' && major.id !== state.sscId)
           return (
             <MajorNodeMarker
               key={major.id}
               node={major}
               role={role}
-              clickable={clickable}
+              clickable={state.phase === 'select-ssc' || state.phase === 'select-dsc'}
               isCurrentLocation={(state.phase === 'layer1' || state.phase === 'layer2') && major.id === state.dscId}
-              onClick={() => handleMajorClick(major.id)}
+              onClick={() => setPopupNodeId(major.id)}
             />
           )
         })}
@@ -217,11 +226,8 @@ export default function MapStage({ state, onSelectSsc, onSelectDsc, onBuy, onNot
               node={lmdhs.red}
               label="LMDH"
               isActive={false}
-              showActions={false}
               compactCallouts={compactCallouts}
               refused
-              onSold={() => {}}
-              onNotSold={() => {}}
             />
             {lmdhs.magenta.map((node) => (
               <NodeMarker
@@ -229,11 +235,7 @@ export default function MapStage({ state, onSelectSsc, onSelectDsc, onBuy, onNot
                 node={node}
                 label="LMDH"
                 isActive={false}
-                showActions={state.layer1Pending.includes(node.id)}
-                hideNotSold
-                compactCallouts={compactCallouts}
-                onSold={() => onBuy({ id: node.id, city: node.city, lat: node.lat, lng: node.lng })}
-                onNotSold={() => onNotSold(node.id)}
+                                compactCallouts={compactCallouts}
               />
             ))}
             {!mapFlying &&
@@ -254,12 +256,10 @@ export default function MapStage({ state, onSelectSsc, onSelectDsc, onBuy, onNot
                 node={node}
                 label={id}
                 isActive={false}
-                showActions
                 hideLabel
-                hideNotSold
+                badge={boostBadges[id] ? { text: boostBadges[id].short, bg: boostBadges[id].bg, fg: boostBadges[id].fg } : undefined}
                 compactCallouts={compactCallouts}
-                onSold={() => onBuy({ id: node.id, city: node.city, lat: node.lat, lng: node.lng })}
-                onNotSold={() => onNotSold(id)}
+                onInfo={() => setPopupNodeId(id)}
               />
             )
           })}
@@ -270,6 +270,8 @@ export default function MapStage({ state, onSelectSsc, onSelectDsc, onBuy, onNot
               key={`zone-${id}`}
               node={majorToHubNode(getMajorNode(id))}
               color="magenta"
+              // Circle colour follows the boost reason (priority: cart > frequency > density > sparse).
+              hex={boostBadges[id] ? { fill: boostBadges[id].bg, stroke: boostBadges[id].stroke } : undefined}
               radiusMeters={LAYER2_RADIUS_METERS}
             />
           ))}
@@ -289,17 +291,32 @@ export default function MapStage({ state, onSelectSsc, onSelectDsc, onBuy, onNot
                     node={node}
                     label={state.layer3Path[index]}
                     isActive={index === state.highlightedIndex}
-                    showActions={index === state.auctionIndex}
                     hideLabel
                     compactCallouts={compactCallouts}
-                    onSold={() => onBuy({ id: node.id, city: node.city, lat: node.lat, lng: node.lng })}
-                    onNotSold={() => onNotSold(node.id)}
+                    onInfo={() => setPopupNodeId(node.id as MajorNodeId)}
                   />
                 ))}
               </>
             )
           })()}
       </MapContainer>
+
+      {popupNodeId && (
+        <NodePopup
+          nodeId={popupNodeId}
+          phase={state.phase}
+          sscId={state.sscId}
+          onClose={() => setPopupNodeId(null)}
+          onUseAsSource={(id) => {
+            onUseAsSource(id)
+            setPopupNodeId(null)
+          }}
+          onUseAsDestination={(id) => {
+            onUseAsDestination(id)
+            setPopupNodeId(null)
+          }}
+        />
+      )}
     </div>
   )
 }

@@ -12,7 +12,7 @@ body,
 body {
   font-family: 'Public Sans', system-ui, sans-serif;
   background: #fffdf8;
-  color: #580b46;
+  color: #783965;
 }
 
 .leaflet-container {
@@ -62,8 +62,8 @@ body {
   height: 20px;
   border-radius: 9999px;
   border: 3px solid #fffdf8;
-  background: #580b46;
-  box-shadow: 0 2px 8px rgba(88, 11, 70, 0.4);
+  background: #783965;
+  box-shadow: 0 2px 8px rgba(120, 57, 101, 0.4);
   pointer-events: auto;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
@@ -75,14 +75,14 @@ body {
   transform: translateX(-50%);
   pointer-events: none;
   white-space: nowrap;
-  background: #f9a8d4;
-  color: #580b46;
+  background: #fd9b08;
+  color: #783965;
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.02em;
   padding: 4px 10px;
   border-radius: 9999px;
-  box-shadow: 0 4px 10px rgba(88, 11, 70, 0.25);
+  box-shadow: 0 4px 10px rgba(120, 57, 101, 0.25);
   animation: pop-in 0.3s ease-out;
 }
 
@@ -93,7 +93,7 @@ body {
   left: 50%;
   transform: translateX(-50%);
   border: 5px solid transparent;
-  border-top-color: #f9a8d4;
+  border-top-color: #fd9b08;
 }
 
 /* Stationary map mode: shrink the callout even further for the wider,
@@ -137,14 +137,14 @@ body {
 .hub-marker-label {
   pointer-events: auto;
   background: #fffdf8;
-  border: 1.5px solid rgba(88, 11, 70, 0.15);
+  border: 1.5px solid rgba(120, 57, 101, 0.15);
   border-radius: 9999px;
   padding: 2px 10px;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.02em;
-  color: #580b46;
-  box-shadow: 0 2px 6px rgba(88, 11, 70, 0.18);
+  color: #783965;
+  box-shadow: 0 2px 6px rgba(120, 57, 101, 0.18);
   white-space: nowrap;
 }
 
@@ -191,16 +191,16 @@ body {
 .hub-action-not-sold {
   background: #fbe4e2;
   color: #a13b36;
-  border: 1.5px solid #e2534d;
+  border: 1.5px solid #ef4a59;
 }
 
 @keyframes btn-pulse {
   0%,
   100% {
-    box-shadow: 0 3px 8px rgba(88, 11, 70, 0.18);
+    box-shadow: 0 3px 8px rgba(120, 57, 101, 0.18);
   }
   50% {
-    box-shadow: 0 3px 12px rgba(88, 11, 70, 0.32);
+    box-shadow: 0 3px 12px rgba(120, 57, 101, 0.32);
   }
 }
 
@@ -217,17 +217,17 @@ body {
 
 /* ---- Refused LMDH marker (Layer 1): inert, red, no actions ---- */
 .hub-marker.is-refused .hub-marker-dot {
-  background: #e2534d;
+  background: #ef4a59;
   border-color: #fffdf8;
 }
 
 .hub-marker-refused-callout {
-  background: #e2534d;
+  background: #ef4a59;
   color: #fffdf8;
 }
 
 .hub-marker-refused-callout::after {
-  border-top-color: #e2534d;
+  border-top-color: #ef4a59;
 }
 
 /* ---- Major node marker: the always-visible 14-node network, clickable
@@ -248,10 +248,11 @@ body {
   height: 16px;
   border-radius: 9999px;
   border: 2.5px solid #fffdf8;
-  background: #580b46;
+  background: #783965;
   opacity: 0.55;
-  box-shadow: 0 2px 6px rgba(88, 11, 70, 0.3);
+  box-shadow: 0 2px 6px rgba(120, 57, 101, 0.3);
   pointer-events: auto;
+  cursor: pointer;
   transition: transform 0.2s ease, opacity 0.2s ease, background 0.2s ease;
 }
 
@@ -270,7 +271,7 @@ body {
 
 .major-marker-ssc .major-marker-dot,
 .major-marker-dsc .major-marker-dot {
-  background: #fe9c00;
+  background: #fd9b08;
   opacity: 1;
   transform: scale(1.3);
 }
@@ -285,15 +286,15 @@ body {
 
 .major-marker-tag-pill {
   display: inline-block;
-  background: #fe9c00;
+  background: #fd9b08;
   border-radius: 9999px;
   padding: 1px 7px;
   font-size: 9px;
   font-weight: 800;
   letter-spacing: 0.04em;
-  color: #580b46;
+  color: #783965;
   white-space: nowrap;
-  box-shadow: 0 2px 5px rgba(88, 11, 70, 0.25);
+  box-shadow: 0 2px 5px rgba(120, 57, 101, 0.25);
 }
 
 /* ---- Phone touch targets ----
@@ -347,4 +348,22 @@ body {
 .major-marker.is-mobile .major-marker-tag-pill {
   font-size: 11px;
   padding: 2px 9px;
+}
+
+/* ---- Layer 2 boost-reason pill (under a bidding sort centre) ---- */
+.boost-pill {
+  pointer-events: none;
+  display: inline-block;
+  border-radius: 9999px;
+  padding: 2px 8px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  box-shadow: 0 2px 5px rgba(120, 57, 101, 0.25);
+}
+
+.hub-marker.is-mobile .boost-pill {
+  font-size: 11px;
+  padding: 3px 10px;
 }

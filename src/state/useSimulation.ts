@@ -1,6 +1,5 @@
 import { useCallback, useReducer } from 'react'
-import { getLmdhsForMajor, getMajorNode, getNetworkPath, MAJOR_NODES, type MajorNodeId } from '../data/network'
-import { haversineKm } from '../data/geo'
+import { getLmdhsForMajor, getNetworkPath, qualifyingLayer2Majors, type MajorNodeId } from '../data/network'
 
 export type Phase = 'select-ssc' | 'select-dsc' | 'layer1' | 'layer2' | 'layer3' | 'bought' | 'unsold'
 
@@ -30,6 +29,8 @@ export interface SimState {
 type SimAction =
   | { type: 'SELECT_SSC'; id: MajorNodeId }
   | { type: 'SELECT_DSC'; id: MajorNodeId }
+  | { type: 'SELECT_ROUTE'; sscId: MajorNodeId; dscId: MajorNodeId }
+  | { type: 'REPLAY'; sscId: MajorNodeId; dscId: MajorNodeId }
   | { type: 'BUY'; node: BoughtNode }
   | { type: 'NOT_SOLD'; id: string }
   | { type: 'SKIP_LAYER' }
@@ -45,14 +46,6 @@ const initialState: SimState = {
   highlightedIndex: 0,
   auctionIndex: null,
   boughtAt: null,
-}
-
-function qualifyingLayer2Majors(sscId: MajorNodeId, dscId: MajorNodeId): MajorNodeId[] {
-  const dsc = getMajorNode(dscId)
-  const ssc = getMajorNode(sscId)
-  return MAJOR_NODES.filter(
-    (m) => m.id !== sscId && m.id !== dscId && haversineKm(m, dsc) < haversineKm(m, ssc),
-  ).map((m) => m.id)
 }
 
 function reducer(state: SimState, action: SimAction): SimState {
@@ -71,6 +64,15 @@ function reducer(state: SimState, action: SimAction): SimState {
         layer1Pending: magentaIds,
       }
     }
+
+    case 'SELECT_ROUTE':
+      if ((state.phase !== 'select-ssc' && state.phase !== 'select-dsc') || action.sscId === action.dscId) return state
+      return startRoute(action.sscId, action.dscId)
+
+    // Dashboard replay: works from any phase, as RESET + SELECT_ROUTE in one step.
+    case 'REPLAY':
+      if (action.sscId === action.dscId) return state
+      return startRoute(action.sscId, action.dscId)
 
     case 'BUY':
       if (state.phase !== 'layer1' && state.phase !== 'layer2' && state.phase !== 'layer3') return state
@@ -129,6 +131,11 @@ function reducer(state: SimState, action: SimAction): SimState {
   }
 }
 
+function startRoute(sscId: MajorNodeId, dscId: MajorNodeId): SimState {
+  const magentaIds = getLmdhsForMajor(dscId).magenta.map((n) => n.id)
+  return { ...initialState, phase: 'layer1', sscId, dscId, layer1Pending: magentaIds }
+}
+
 function advanceToLayer2(state: SimState): SimState {
   const layer2Pending = qualifyingLayer2Majors(state.sscId!, state.dscId!)
   if (layer2Pending.length === 0) {
@@ -150,10 +157,18 @@ export function useSimulation() {
 
   const selectSsc = useCallback((id: MajorNodeId) => dispatch({ type: 'SELECT_SSC', id }), [])
   const selectDsc = useCallback((id: MajorNodeId) => dispatch({ type: 'SELECT_DSC', id }), [])
+  const selectRoute = useCallback(
+    (sscId: MajorNodeId, dscId: MajorNodeId) => dispatch({ type: 'SELECT_ROUTE', sscId, dscId }),
+    [],
+  )
+  const replay = useCallback(
+    (sscId: MajorNodeId, dscId: MajorNodeId) => dispatch({ type: 'REPLAY', sscId, dscId }),
+    [],
+  )
   const buy = useCallback((node: BoughtNode) => dispatch({ type: 'BUY', node }), [])
   const notSold = useCallback((id: string) => dispatch({ type: 'NOT_SOLD', id }), [])
   const skipLayer = useCallback(() => dispatch({ type: 'SKIP_LAYER' }), [])
   const reset = useCallback(() => dispatch({ type: 'RESET' }), [])
 
-  return { state, selectSsc, selectDsc, buy, notSold, skipLayer, reset }
+  return { state, selectSsc, selectDsc, selectRoute, replay, buy, notSold, skipLayer, reset }
 }

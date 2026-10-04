@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { Marker } from 'react-leaflet'
-import L, { type LeafletMouseEvent } from 'leaflet'
+import L from 'leaflet'
 import type { HubNode } from '../data/nodes'
 import { useIsMobile } from '../hooks/useIsMobile'
 
@@ -8,26 +8,25 @@ interface Props {
   node: HubNode
   label: string
   isActive: boolean
-  showActions: boolean
   compactCallouts: boolean
   refused?: boolean
   hideLabel?: boolean
-  hideNotSold?: boolean
-  onSold: () => void
-  onNotSold: () => void
+  /** Layer 2 boost-reason tag shown under the marker. */
+  badge?: { text: string; bg: string; fg: string }
+  /** Click on the dot, e.g. to open node stats. Markers carry no auction actions. */
+  onInfo?: () => void
 }
 
+/** A hub on the map. Display only: every Sold / Not Sold action lives in the side panels. */
 export default function NodeMarker({
   node,
   label,
   isActive,
-  showActions,
   compactCallouts,
   refused = false,
   hideLabel = false,
-  hideNotSold = false,
-  onSold,
-  onNotSold,
+  badge,
+  onInfo,
 }: Props) {
   const isMobile = useIsMobile()
 
@@ -54,45 +53,21 @@ export default function NodeMarker({
                    </span>`
             }
             ${
-              showActions
-                ? `<div class="hub-actions">
-                     <button type="button" class="hub-action-btn hub-action-sold">Sold</button>
-                     ${
-                       hideNotSold
-                         ? ''
-                         : '<button type="button" class="hub-action-btn hub-action-not-sold">Not Sold</button>'
-                     }
-                   </div>`
+              badge
+                ? `<span class="boost-pill" style="background:${badge.bg};color:${badge.fg}">${badge.text}</span>`
                 : ''
             }
           </div>
         </div>
       `,
-      // The box is always sized to match the dot exactly — the label/actions
-      // are absolutely positioned off to the side (see .hub-marker-info), so
-      // they never grow this box and skew the anchor away from the pin.
+      // The box is always sized to match the dot exactly — the label is
+      // absolutely positioned off to the side (see .hub-marker-info), so it
+      // never grows this box and skews the anchor away from the pin.
       iconSize: [size, size],
       iconAnchor: [size / 2, size / 2],
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [node, label, isActive, showActions, compactCallouts, refused, hideLabel, hideNotSold, isMobile])
+  }, [node, label, isActive, compactCallouts, refused, hideLabel, badge?.text, isMobile])
 
-  const handleClick = (e: LeafletMouseEvent) => {
-    const target = e.originalEvent.target as HTMLElement
-    if (target.closest('.hub-action-sold')) onSold()
-    else if (target.closest('.hub-action-not-sold')) onNotSold()
-  }
-
-  return (
-    <Marker
-      position={[node.lat, node.lng]}
-      icon={icon}
-      // Leaflet stacks markers by screen Y-position by default, so a marker
-      // further south can render on top of this one and cover its Sold /
-      // Not Sold buttons. Force this marker above every other marker in the
-      // pane whenever its actions are visible.
-      zIndexOffset={showActions ? 10000 : 0}
-      eventHandlers={showActions ? { click: handleClick } : {}}
-    />
-  )
+  return <Marker position={[node.lat, node.lng]} icon={icon} eventHandlers={onInfo ? { click: onInfo } : {}} />
 }

@@ -52,7 +52,9 @@ export default function MajorNodeMarker({ node, role, clickable, isCurrentLocati
       // the node's identity is still discoverable on hover.
       title={node.city}
       zIndexOffset={role === 'ssc' || role === 'dsc' ? 5000 : 0}
-      eventHandlers={clickable ? { click: onClick } : {}}
+      // Every major node opens its stats popup; `clickable` is only the
+      // highlighted look used while choosing a source / destination.
+      eventHandlers={{ click: onClick }}
     />
   )
 }

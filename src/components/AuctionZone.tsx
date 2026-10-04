@@ -5,14 +5,16 @@ import { ZONE_COLOR_HEX, type HubNode, type ZoneColor } from '../data/nodes'
 interface Props {
   node: HubNode
   color: ZoneColor
+  /** Overrides the colour preset (used by Layer 2, where colour encodes the boost reason). */
+  hex?: { fill: string; stroke: string }
   radiusMeters?: number
 }
 
 const DEFAULT_ZONE_RADIUS_METERS = 200000
 const GROW_DURATION_MS = 600
 
-export default function AuctionZone({ node, color, radiusMeters = DEFAULT_ZONE_RADIUS_METERS }: Props) {
-  const hex = ZONE_COLOR_HEX[color]
+export default function AuctionZone({ node, color, hex: hexOverride, radiusMeters = DEFAULT_ZONE_RADIUS_METERS }: Props) {
+  const hex = hexOverride ?? ZONE_COLOR_HEX[color]
   const [radius, setRadius] = useState(0)
 
   useEffect(() => {

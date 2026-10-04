@@ -17,7 +17,7 @@ export default function PipelineEdges({ points, dashed = true }: Props) {
     <Polyline
       positions={positions}
       pathOptions={{
-        color: '#580b46',
+        color: '#783965',
         weight: 3,
         opacity: 0.45,
         dashArray: dashed ? '2 10' : undefined,

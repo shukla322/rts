@@ -1,4 +1,5 @@
 import type { HubNode } from './nodes'
+import { haversineKm } from './geo'
 
 export type MajorNodeId = 'GUW' | 'KOL' | 'BBS' | 'CHE' | 'HYD' | 'BLR' | 'TRV' | 'BOM' | 'PUN' | 'AMD' | 'JAI' | 'DEL' | 'BHO' | 'DEH'
 
@@ -95,6 +96,41 @@ const LMDH_OFFSETS: { angleDeg: number; radiusDeg: number }[] = [
   { angleDeg: 288, radiusDeg: 0.4 },
 ]
 
+// Coastal cities: the default ring would put hubs in the sea, so each gets a
+// hand-picked set of land-side offsets (0 deg = east, 90 deg = north) instead.
+// Mumbai and Trivandrum face the Arabian Sea, Chennai and Bhubaneswar the Bay
+// of Bengal. Index 0 is still the refused hub.
+const COASTAL_LMDH_OFFSETS: Partial<Record<MajorNodeId, { angleDeg: number; radiusDeg: number }[]>> = {
+  BOM: [
+    { angleDeg: 0, radiusDeg: 0.45 },
+    { angleDeg: 50, radiusDeg: 0.5 },
+    { angleDeg: -45, radiusDeg: 0.5 },
+    { angleDeg: 20, radiusDeg: 0.95 },
+    { angleDeg: -25, radiusDeg: 0.9 },
+  ],
+  CHE: [
+    { angleDeg: 180, radiusDeg: 0.45 },
+    { angleDeg: 125, radiusDeg: 0.6 },
+    { angleDeg: 240, radiusDeg: 0.5 },
+    { angleDeg: 150, radiusDeg: 0.85 },
+    { angleDeg: 210, radiusDeg: 0.85 },
+  ],
+  BBS: [
+    { angleDeg: 90, radiusDeg: 0.5 },
+    { angleDeg: 150, radiusDeg: 0.5 },
+    { angleDeg: 200, radiusDeg: 0.65 },
+    { angleDeg: 175, radiusDeg: 1 },
+    { angleDeg: 120, radiusDeg: 0.95 },
+  ],
+  TRV: [
+    { angleDeg: 75, radiusDeg: 0.5 },
+    { angleDeg: 15, radiusDeg: 0.5 },
+    { angleDeg: 95, radiusDeg: 0.9 },
+    { angleDeg: 35, radiusDeg: 0.95 },
+    { angleDeg: 0, radiusDeg: 0.9 },
+  ],
+}
+
 function offsetLatLng(lat: number, lng: number, angleDeg: number, radiusDeg: number) {
   const rad = (angleDeg * Math.PI) / 180
   const dLat = radiusDeg * Math.sin(rad)
@@ -104,7 +140,7 @@ function offsetLatLng(lat: number, lng: number, angleDeg: number, radiusDeg: num
 
 export function getLmdhsForMajor(majorId: MajorNodeId): { red: HubNode; magenta: HubNode[] } {
   const major = getMajorNode(majorId)
-  const nodes = LMDH_OFFSETS.map((offset, i) => {
+  const nodes = (COASTAL_LMDH_OFFSETS[majorId] ?? LMDH_OFFSETS).map((offset, i) => {
     const { lat, lng } = offsetLatLng(major.lat, major.lng, offset.angleDeg, offset.radiusDeg)
     return {
       id: `${majorId}-LMDH-${i}`,
@@ -116,4 +152,19 @@ export function getLmdhsForMajor(majorId: MajorNodeId): { red: HubNode; magenta:
   })
   const [red, ...magenta] = nodes
   return { red, magenta }
+}
+
+// ---- Layer 2 qualification: every other major node geographically closer to
+// the parcel (DSC) than to the original seller (SSC) bids nation-wide. ----
+export function qualifyingLayer2Majors(sscId: MajorNodeId, dscId: MajorNodeId): MajorNodeId[] {
+  const dsc = getMajorNode(dscId)
+  const ssc = getMajorNode(sscId)
+  return MAJOR_NODES.filter(
+    (m) => m.id !== sscId && m.id !== dscId && haversineKm(m, dsc) < haversineKm(m, ssc),
+  ).map((m) => m.id)
+}
+
+/** The major node a hub id belongs to ("BOM-LMDH-2" -> "BOM", "DEL" -> "DEL"). */
+export function majorIdOfNode(nodeId: string): MajorNodeId {
+  return nodeId.split('-LMDH-')[0] as MajorNodeId
 }

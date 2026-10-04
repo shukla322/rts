@@ -1,4 +1,6 @@
 Primary BG (white-ish) --> #fffdf8
-Primary BG (beige) --> #fef2d7
-Header BG (Purple) --> #580b46
-Highlight (Orange) --> #fe9c00
+Primary BG (beige) --> #f9f6e79
+Header BG (Magenta) --> #783965
+Highlight (Orange) --> #fd9b08
+Slight Highlight (Light orange) --> #fff3d7
+Numerical Highlight (vivid red) --> #ef4a59
