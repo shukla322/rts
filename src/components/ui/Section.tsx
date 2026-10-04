@@ -15,7 +15,7 @@ type SectionProps = {
 export function Section({ title, step, children, className, tone, pad }: SectionProps) {
   return (
     <section className={cx('flex flex-col gap-2', className)}>
-      <div className="flex items-center gap-2 px-1">
+      <div className="section-band flex items-center gap-2 px-1">
         {step !== undefined && (
           <span
             aria-hidden

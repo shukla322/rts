@@ -37,54 +37,65 @@ export function majorToHubNode(major: MajorNode): HubNode {
   return { id: major.id, name: 'Sort Centre', city: major.city, lat: major.lat, lng: major.lng }
 }
 
-// ---- Network path (SSC <-> DSC), hardcoded via fixed region/gateway data ----
-// Every major belongs to one region; every non-central region has a single
-// gateway major that stands in for it when connecting to another region.
-// The chain between any two majors is assembled from this fixed table, never
-// computed from live distances — it just avoids hand-typing all 91 pairs.
-type Region = 'NE' | 'E' | 'S' | 'W' | 'N' | 'CENTRAL'
+// Bidirectional corridors for this simulated hub network, not verified road
+// routes. Keep intermediate hubs on their corridors (e.g. BOM-PUN-BLR).
+// Connecting every pair directly would always skip intermediate hubs because
+// straight-line distance obeys the triangle inequality.
+export const NETWORK_LINKS: ReadonlyArray<readonly [MajorNodeId, MajorNodeId]> = [
+  ['BOM', 'PUN'], ['BOM', 'AMD'],
+  ['PUN', 'BLR'], ['PUN', 'HYD'], ['PUN', 'BHO'],
+  ['AMD', 'JAI'], ['AMD', 'BHO'],
+  ['JAI', 'DEL'], ['JAI', 'BHO'], ['DEL', 'DEH'], ['DEL', 'BHO'],
+  ['BHO', 'HYD'], ['BHO', 'BBS'], ['BHO', 'KOL'],
+  ['HYD', 'BLR'], ['HYD', 'CHE'], ['HYD', 'BBS'],
+  ['BLR', 'CHE'], ['BLR', 'TRV'], ['CHE', 'TRV'], ['CHE', 'BBS'],
+  ['BBS', 'KOL'], ['KOL', 'GUW'],
+]
 
-const MAJOR_REGION: Record<MajorNodeId, Region> = {
-  GUW: 'NE',
-  KOL: 'E',
-  BBS: 'E',
-  CHE: 'S',
-  HYD: 'S',
-  BLR: 'S',
-  TRV: 'S',
-  BOM: 'W',
-  PUN: 'W',
-  AMD: 'W',
-  JAI: 'N',
-  DEL: 'N',
-  DEH: 'N',
-  BHO: 'CENTRAL',
+const adjacency = new Map<MajorNodeId, { id: MajorNodeId; km: number }[]>(
+  MAJOR_NODES.map((node) => [node.id, []]),
+)
+for (const [a, b] of NETWORK_LINKS) {
+  const km = haversineKm(getMajorNode(a), getMajorNode(b))
+  adjacency.get(a)!.push({ id: b, km })
+  adjacency.get(b)!.push({ id: a, km })
 }
 
-const REGION_GATEWAY: Record<Region, MajorNodeId> = {
-  NE: 'GUW',
-  E: 'KOL',
-  S: 'HYD',
-  W: 'BOM',
-  N: 'DEL',
-  CENTRAL: 'BHO',
-}
-
+/** Dijkstra: minimize total geographic km, not hop count or region changes. */
 export function getNetworkPath(fromId: MajorNodeId, toId: MajorNodeId): MajorNodeId[] {
-  const fromRegion = MAJOR_REGION[fromId]
-  const toRegion = MAJOR_REGION[toId]
-  const chain: MajorNodeId[] = [fromId]
+  getMajorNode(fromId)
+  getMajorNode(toId)
+  const pending = new Set(MAJOR_NODES.map((node) => node.id))
+  const distances = new Map<MajorNodeId, number>([[fromId, 0]])
+  const previous = new Map<MajorNodeId, MajorNodeId>()
 
-  if (fromRegion !== toRegion) {
-    const fromGateway = REGION_GATEWAY[fromRegion]
-    const toGateway = REGION_GATEWAY[toRegion]
-    if (fromId !== fromGateway) chain.push(fromGateway)
-    if (fromRegion !== 'CENTRAL' && toRegion !== 'CENTRAL') chain.push('BHO')
-    if (toId !== toGateway) chain.push(toGateway)
+  while (pending.size > 0) {
+    let nearest: MajorNodeId | undefined
+    let best = Infinity
+    for (const id of pending) {
+      const distance = distances.get(id) ?? Infinity
+      if (distance < best) {
+        nearest = id
+        best = distance
+      }
+    }
+    if (nearest === undefined) break
+    if (nearest === toId) {
+      const path: MajorNodeId[] = [toId]
+      while (path[0] !== fromId) path.unshift(previous.get(path[0])!)
+      return path
+    }
+    pending.delete(nearest)
+    for (const neighbor of adjacency.get(nearest)!) {
+      if (!pending.has(neighbor.id)) continue
+      const candidate = best + neighbor.km
+      if (candidate < (distances.get(neighbor.id) ?? Infinity)) {
+        distances.set(neighbor.id, candidate)
+        previous.set(neighbor.id, nearest)
+      }
+    }
   }
-  chain.push(toId)
-
-  return chain.filter((id, i) => i === 0 || id !== chain[i - 1])
+  throw new Error(`No hub route from ${fromId} to ${toId}`)
 }
 
 // ---- LMDH minor nodes (fixed radial offsets per major, one red + rest magenta) ----

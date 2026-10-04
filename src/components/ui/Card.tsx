@@ -4,7 +4,7 @@ import { cx } from './cx'
 /**
  * The one container surface used everywhere.
  *  - surface:   white card with a hairline border (default)
- *  - muted:     soft beige panel, for secondary or inactive content
+ *  - muted:     soft pink panel, for secondary or inactive content
  *  - highlight: light-orange panel with an orange edge, for the active / selected item
  */
 export type CardTone = 'surface' | 'muted' | 'highlight'
@@ -26,7 +26,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(function Card(
   { tone = 'surface', pad = 'md', className, ...rest },
   ref,
 ) {
-  return <div ref={ref} className={cx('rounded-xl', TONE[tone], PAD[pad], className)} {...rest} />
+  return <div ref={ref} className={cx('ui-card rounded-[18px] shadow-card', TONE[tone], PAD[pad], className)} {...rest} />
 })
 
 /** Title line for a card: title, optional subtitle, and optional controls on the right. */

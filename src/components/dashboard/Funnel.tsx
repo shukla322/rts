@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { funnel, type LayerFilter } from '../../data/selectors'
 import type { RunRecord } from '../../data/types'
 import { Button, Card, CardHeader, cx } from '../ui'
-import { LAYER_COLOR, LAYER_LABEL } from './chartColors'
+import { LAYER_FILL, LAYER_LABEL } from './chartColors'
 
 interface Props {
   runs: RunRecord[]
@@ -17,14 +17,14 @@ export default function Funnel({ runs, layerFilter, onLayerFilterChange }: Props
   const toggle = (next: LayerFilter) => onLayerFilterChange(layerFilter === next ? undefined : next)
 
   return (
-    <Card className="flex flex-col gap-3">
+    <Card className="dashboard-funnel flex flex-col gap-4">
       <CardHeader
         title="Layer funnel"
         subtitle="Unsold parcels move down a layer: light bar = reached the layer, dark bar = sold there. Click a layer to filter the breakdowns below."
       />
 
       <div className="flex flex-col gap-1">
-        <FunnelRow label="Returns" bar={<Bar value={f.returns} total={total} color="#783965" faint />} count={f.returns} />
+        <FunnelRow label="Returns" bar={<Bar value={f.returns} total={total} color={LAYER_FILL[1]} faint />} count={f.returns} />
 
         {f.stages.map((s) => (
           <FunnelRow
@@ -35,13 +35,13 @@ export default function Funnel({ runs, layerFilter, onLayerFilterChange }: Props
             title={`${s.sold} sold of ${s.reached} that reached ${LAYER_LABEL[s.layer]}`}
             bar={
               <>
-                <Bar value={s.reached} total={total} color={LAYER_COLOR[s.layer]} faint />
-                <Bar value={s.sold} total={total} color={LAYER_COLOR[s.layer]} />
+                <Bar value={s.reached} total={total} color={LAYER_FILL[s.layer]} faint />
+                <Bar value={s.sold} total={total} color={LAYER_FILL[s.layer]} />
               </>
             }
             count={
               <>
-                <b className="font-display text-num-red">{s.sold}</b> sold{' '}
+                <b className="font-display text-header-purple">{s.sold}</b> sold{' '}
                 <span className="text-header-purple/50">/ {s.reached}</span>
               </>
             }
@@ -52,7 +52,7 @@ export default function Funnel({ runs, layerFilter, onLayerFilterChange }: Props
           label="Unsold"
           active={layerFilter === 'unsold'}
           onClick={() => toggle('unsold')}
-          bar={<Bar value={f.unsold} total={total} color={LAYER_COLOR.unsold} />}
+          bar={<Bar value={f.unsold} total={total} color={LAYER_FILL.unsold} />}
           count={f.unsold}
         />
       </div>
@@ -89,7 +89,7 @@ function FunnelRow({
       <span className="w-28 shrink-0 text-right text-header-purple">{count}</span>
     </>
   )
-  const row = cx('flex items-center gap-3 rounded-lg px-1 py-1 text-body text-left transition-colors')
+  const row = cx('funnel-row text-body text-left transition-colors')
 
   if (!onClick) return <div className={row}>{content}</div>
   return (
@@ -109,8 +109,8 @@ function FunnelRow({
 function Bar({ value, total, color, faint }: { value: number; total: number; color: string; faint?: boolean }) {
   return (
     <div
-      className="absolute inset-y-0 left-0 rounded-full"
-      style={{ width: `${(value / total) * 100}%`, background: faint ? `${color}66` : color }}
+      className="chart-bar absolute inset-y-0 left-0 rounded-full"
+      style={{ width: `${(value / total) * 100}%`, background: color, opacity: faint ? 0.2 : 1 }}
     />
   )
 }

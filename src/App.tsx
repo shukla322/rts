@@ -5,7 +5,6 @@ import MapStage from './components/MapStage'
 import PricingCard from './components/PricingCard'
 import EndScreen from './components/EndScreen'
 import KpiStrip from './components/KpiStrip'
-import Dashboard from './components/dashboard/Dashboard'
 import History from './components/history/History'
 import Sellers from './components/sellers/Sellers'
 import { useSimulation } from './state/useSimulation'
@@ -75,14 +74,14 @@ function AppShell() {
   )
 
   return (
-    <div className="h-screen w-screen flex flex-col bg-bg-white overflow-y-auto md:overflow-hidden">
+    <div className={`app-shell page-${activeTab} h-screen w-full flex flex-col bg-bg-white overflow-y-auto md:overflow-hidden`}>
       <Header activeTab={activeTab} onTabChange={setActiveTab} />
 
       {activeTab === 'home' && (
         <div className="flex-1 flex flex-col md:min-h-0">
           <KpiStrip runs={runs} />
 
-          <div className="flex-1 flex flex-col md:flex-row md:min-h-0">
+          <div className="simulation-workspace flex-1 flex flex-col md:flex-row md:min-h-0">
             <Sidebar
               state={state}
               onReset={reset}
@@ -96,7 +95,7 @@ function AppShell() {
             />
 
             <div className="flex-1 flex flex-col min-w-0">
-              <div className="flex-1 flex flex-col md:flex-row md:min-h-0">
+              <div className="simulation-workspace flex-1 flex flex-col md:flex-row md:min-h-0">
                 <MapStage
                   state={state}
                   categoryId={product.categoryId}
@@ -116,12 +115,6 @@ function AppShell() {
             </div>
           </div>
         </div>
-      )}
-
-      {activeTab === 'dashboard' && (
-        <main className="flex-1 md:min-h-0 md:overflow-y-auto bg-bg-white">
-          <Dashboard />
-        </main>
       )}
 
       {activeTab === 'history' && (

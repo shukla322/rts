@@ -4,16 +4,16 @@ export default {
   theme: {
     extend: {
       colors: {
-        'bg-white': '#fffdf8',
-        'bg-beige': '#f9f6e7',
-        'header-purple': '#783965',
-        'highlight-orange': '#fd9b08',
-        'light-orange': '#fff3d7',
-        'num-red': '#ef4a59',
+        'bg-white': '#ffffff',
+        'bg-beige': '#FCE6F3',
+        'header-purple': '#580b46',
+        'highlight-orange': '#fe9c00',
+        'light-orange': '#fff1d7',
+        'num-red': '#c23b3b',
         'auction-green': '#8bc98a',
         'auction-yellow': '#f6d743',
         'auction-orange': '#f4a340',
-        'auction-red': '#ef4a59',
+        'auction-red': '#c23b3b',
         'soft-pink': '#f9a8d4',
       },
       // Type scale: caption (labels, hints) and body (default UI text). Larger sizes use
@@ -23,11 +23,11 @@ export default {
         body: ['13px', { lineHeight: '1.5' }],
       },
       fontFamily: {
-        display: ['"Public Sans"', 'system-ui', 'sans-serif'],
-        body: ['"Public Sans"', 'system-ui', 'sans-serif'],
+        display: ['"Montserrat"', 'system-ui', 'sans-serif'],
+        body: ['"Montserrat"', 'system-ui', 'sans-serif'],
       },
       boxShadow: {
-        card: '0 20px 45px -15px rgba(120, 57, 101, 0.35)',
+        card: '0 10px 28px -22px rgba(88,11,70,.44), inset 0 1px 0 #fff',
         glow: '0 0 0 6px rgba(253, 155, 8, 0.25)',
         'glow-pink': '0 0 0 6px rgba(249, 168, 212, 0.35)',
       },

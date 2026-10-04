@@ -14,7 +14,7 @@ export default function History({ onReplay }: Props) {
     <PageShell>
       <PageHeader
         title="RTS History"
-        subtitle="Every return handled by Return-to-Sale. Expand a row for its decision trace, or replay it on Home."
+        subtitle="Every return handled by Return-to-Sale. Open a card for its decision trace, or replay it on Home."
       />
       <ReturnsTable runs={runs} onReplay={onReplay} />
     </PageShell>

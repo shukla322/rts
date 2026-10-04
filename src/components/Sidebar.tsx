@@ -52,8 +52,9 @@ export default function Sidebar({
   const showLogisticsStats = state.phase === 'layer3' || (state.phase === 'bought' && state.boughtAt?.layer === 3)
 
   return (
-    <aside className="w-full md:w-[30vw] lg:min-w-[400px] shrink-0 md:h-full overflow-visible md:overflow-y-auto bg-bg-beige border-b md:border-b-0 md:border-r border-header-purple/10 px-4 py-5">
+    <aside className="setup-panel w-full md:w-[30vw] shrink-0 md:h-full overflow-visible md:overflow-y-auto bg-bg-beige border-b md:border-b-0 md:border-r border-header-purple/10 px-4 py-5">
       <div className="flex flex-col gap-5">
+        <div className="panel-intro"><p className="panel-eyebrow">Return simulator</p><h2>Give every return<br />a second chance<span>.</span></h2><p>Configure a parcel and follow its path to resale.</p></div>
         <Section step={1} title="Choose source & destination">
           {selecting ? (
             <div className="flex flex-col gap-3">

@@ -166,7 +166,7 @@ export default function MapStage({ state, categoryId, onUseAsSource, onUseAsDest
   }, [state.sscId, state.dscId])
 
   return (
-    <div className="h-[60vh] md:h-full md:flex-1 min-h-0 md:min-w-0 relative">
+    <div className="map-stage h-[60vh] md:h-full md:flex-1 min-h-0 md:min-w-0 relative">
       <FocusModeToggle mode={focusMode} onChange={setFocusMode} />
       <MapContainer
         center={[21, 82]}

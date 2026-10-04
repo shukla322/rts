@@ -18,13 +18,13 @@ interface StatProps {
 /** The one metric tile: label, big number, hint. Used for every KPI and stat in the app. */
 export function Stat({ label, value, hint, size = 'md', quiet, className }: StatProps) {
   return (
-    <Card pad="none" className={cx(size === 'md' ? 'px-3.5 py-3' : 'px-3 py-2', className)}>
+    <Card pad="none" className={cx(size === 'md' ? 'stat-tile stat-large px-4 py-4' : 'stat-tile px-3 py-3', className)}>
       <Eyebrow className="leading-snug">{label}</Eyebrow>
       <p
         className={cx(
           'font-display font-extrabold leading-tight mt-0.5',
           size === 'md' ? 'text-xl' : 'text-lg',
-          quiet ? 'text-header-purple' : 'text-num-red',
+          quiet ? 'text-header-purple' : 'stat-value text-header-purple',
         )}
       >
         {value}

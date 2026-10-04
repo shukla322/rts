@@ -12,7 +12,7 @@ import type { CategoryId, Layer, RunRecord } from '../../data/types'
 import { BOOST_REASON_META } from '../../engine/boostReasons'
 import { pct } from '../../utils/format'
 import { Card, CardHeader, Disclosure, Select } from '../ui'
-import { LAYER_COLOR, LAYER_LABEL } from './chartColors'
+import { LAYER_FILL, LAYER_LABEL, SINGLE_SERIES_COLOR } from './chartColors'
 
 interface Segment {
   key: string
@@ -40,7 +40,7 @@ function outcomeRows(rows: OutcomeBreakdownRow[], hideEmpty = false): BarRow[] {
         key: String(key),
         label: LAYER_LABEL[key],
         value: key === 'unsold' ? r.unsold : r.soldByLayer[key],
-        color: LAYER_COLOR[key],
+        color: LAYER_FILL[key],
       })),
       trailing: `${pct(r.resoldPct)} resold · ${r.returns}`,
     }))
@@ -62,14 +62,14 @@ function BarCard({
   const max = Math.max(1, ...rows.map((r) => r.segments.reduce((a, s) => a + s.value, 0)))
 
   return (
-    <Card className="flex flex-col gap-3">
+    <Card className="dashboard-chart flex flex-col gap-4">
       <CardHeader title={title} subtitle={subtitle} actions={headerExtra} />
 
       {legend.length > 1 && (
-        <ul className="flex flex-wrap gap-x-3 gap-y-1">
+        <ul className="chart-legend flex flex-wrap gap-x-4 gap-y-2">
           {legend.map((l) => (
             <li key={l.label} className="flex items-center gap-1.5 text-caption text-header-purple/70">
-              <span className="h-2 w-2 rounded-sm" style={{ background: l.color }} aria-hidden />
+              <span className="h-3 w-4 rounded-sm" style={{ background: l.color }} aria-hidden />
               {l.label}
             </li>
           ))}
@@ -80,11 +80,11 @@ function BarCard({
         {rows.map((r) => {
           const total = r.segments.reduce((a, s) => a + s.value, 0)
           return (
-            <div key={r.id} className="flex items-center gap-2.5 text-caption">
-              <span className="w-24 sm:w-28 shrink-0 truncate font-semibold text-header-purple" title={r.name}>
+            <div key={r.id} className="breakdown-row text-caption">
+              <span className="breakdown-label font-semibold text-header-purple" title={r.name}>
                 {r.name}
               </span>
-              <div className="flex-1 min-w-0">
+              <div className="breakdown-track min-w-0">
                 <div
                   className="flex h-3 gap-[2px]"
                   style={{ width: `${(total / max) * 100}%`, minWidth: total > 0 ? 4 : 0 }}
@@ -101,13 +101,13 @@ function BarCard({
                     ))}
                 </div>
               </div>
-              <span className="shrink-0 text-right text-header-purple/70 tabular-nums">{r.trailing}</span>
+              <span className="breakdown-summary text-right text-header-purple/70 tabular-nums">{r.trailing}</span>
             </div>
           )
         })}
       </div>
 
-      <Disclosure title="View as table">
+      <Disclosure className="chart-table-disclosure" title="View as table">
         <div className="overflow-x-auto">
           <table className="w-full text-caption text-header-purple">
             <thead>
@@ -149,16 +149,17 @@ export default function Breakdowns({ runs }: { runs: RunRecord[] }) {
   const sellerRows = useMemo(() => outcomeRows(bySeller(runs, SELLERS)), [runs])
   const reasons = useMemo(() => byBoostReason(runs, reasonCategory || undefined), [runs, reasonCategory])
 
-  const legend = SEGMENT_KEYS.map((key) => ({ label: LAYER_LABEL[key], color: LAYER_COLOR[key] }))
+  const legend = SEGMENT_KEYS.map((key) => ({ label: LAYER_LABEL[key], color: LAYER_FILL[key] }))
   const reasonRows: BarRow[] = reasons.rows.map((r) => ({
     id: r.reason,
     name: BOOST_REASON_META[r.reason].label,
-    segments: [{ key: r.reason, label: 'Layer 2 resales', value: r.count, color: BOOST_REASON_META[r.reason].bg }],
+    segments: [{ key: r.reason, label: 'Layer 2 resales', value: r.count, color: SINGLE_SERIES_COLOR }],
     trailing: `${pct(r.share)} · ${r.count}`,
   }))
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+    <div className="dashboard-breakdowns">
+      <div className="dashboard-chart-column">
       <BarCard
         title="By category"
         subtitle="Returns by where they sold, and the share resold"
@@ -166,15 +167,17 @@ export default function Breakdowns({ runs }: { runs: RunRecord[] }) {
         legend={legend}
       />
       <BarCard
-        title="By seller"
-        subtitle="Returns by where they sold, and the share resold"
-        rows={sellerRows}
-        legend={legend}
-      />
-      <BarCard
         title="By region / node"
         subtitle="Grouped by destination node (where the return lands)"
         rows={nodeRows}
+        legend={legend}
+      />
+      </div>
+      <div className="dashboard-chart-column">
+      <BarCard
+        title="By seller"
+        subtitle="Returns by where they sold, and the share resold"
+        rows={sellerRows}
         legend={legend}
       />
       <BarCard
@@ -192,6 +195,7 @@ export default function Breakdowns({ runs }: { runs: RunRecord[] }) {
           />
         }
       />
+      </div>
     </div>
   )
 }

@@ -24,7 +24,7 @@ export default function KpiStrip({ runs }: { runs: RunRecord[] }) {
   ]
 
   return (
-    <section aria-label="Key metrics" className="shrink-0 bg-bg-beige/60 border-b border-header-purple/10 px-4 py-3">
+    <section aria-label="Key metrics" className="kpi-strip shrink-0 bg-bg-beige/60 border-b border-header-purple/10 px-4 py-3">
       <div className="flex md:grid md:grid-cols-5 gap-2 overflow-x-auto md:overflow-visible">
         {tiles.map((t) => (
           <Stat key={t.label} size="sm" className="shrink-0 min-w-[150px] md:min-w-0" {...t} />

@@ -85,7 +85,7 @@ export default function PricingCard({ state, pricingConfig, productId, onBuy, on
     onBuy({ id: node.id, city: node.city, lat: node.lat, lng: node.lng })
 
   return (
-    <aside className="w-full md:w-[30vw] shrink-0 md:h-full overflow-visible md:overflow-y-auto bg-bg-white border-b md:border-b-0 md:border-l border-header-purple/10 flex flex-col">
+    <aside className="auction-panel w-full md:w-[30vw] shrink-0 md:h-full overflow-visible md:overflow-y-auto bg-bg-white border-b md:border-b-0 md:border-l border-header-purple/10 flex flex-col">
       {/* The parcel: what is being sold, and what the buyer sees at the current price */}
       <div className="p-5 border-b border-header-purple/10 flex flex-col gap-3">
         <Eyebrow>{headline}</Eyebrow>

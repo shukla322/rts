@@ -1,4 +1,4 @@
-import { Fragment, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { CATEGORIES, getCategory, getProduct } from '../../data/catalog'
 import { getMajorNode, type MajorNodeId } from '../../data/network'
 import { getSeller } from '../../data/sellers'
@@ -75,18 +75,13 @@ export default function ReturnsTable({ runs, onReplay }: Props) {
     })
   }, [runs, layerFilter, categoryId, sort])
 
-  const toggleSort = (key: SortKey) =>
-    setSort((s) => (s.key === key ? { key, dir: s.dir === 'asc' ? 'desc' : 'asc' } : { key, dir: key === 'time' ? 'desc' : 'asc' }))
-
-  const colCount = COLUMNS.length + 3
-
   return (
-    <Card className="flex flex-col gap-3">
-      <div className="flex items-center justify-between gap-2 flex-wrap">
+    <div className="history-list">
+      <Card className="history-toolbar">
         <p className="text-body font-semibold text-header-purple/70">
           {rows.length.toLocaleString('en-IN')} {rows.length === 1 ? 'return' : 'returns'}
         </p>
-        <div className="flex gap-2">
+        <div className="history-filters">
           <Select
             size="sm"
             aria-label="Filter by category"
@@ -113,98 +108,69 @@ export default function ReturnsTable({ runs, onReplay }: Props) {
               setVisible(PAGE_SIZE)
             }}
           />
+          <Select
+            size="sm"
+            aria-label="Sort returns"
+            value={sort.key}
+            options={COLUMNS.map((column) => ({ value: column.key, label: `Sort: ${column.label}` }))}
+            onChange={(key) => setSort({ key: key as SortKey, dir: key === 'time' ? 'desc' : 'asc' })}
+          />
+          <Button variant="outline" size="sm" aria-label={`Sort ${sort.dir === 'asc' ? 'descending' : 'ascending'}`}
+            onClick={() => setSort((current) => ({ ...current, dir: current.dir === 'asc' ? 'desc' : 'asc' }))}>
+            {sort.dir === 'asc' ? 'Ascending' : 'Descending'}
+          </Button>
         </div>
-      </div>
+      </Card>
 
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[980px] text-body text-header-purple">
-          <thead>
-            <tr className="text-left text-caption uppercase tracking-wider text-header-purple/55">
-              {COLUMNS.map((c) => {
-                const active = sort.key === c.key
-                return (
-                  <th
-                    key={c.key}
-                    aria-sort={active ? (sort.dir === 'asc' ? 'ascending' : 'descending') : 'none'}
-                    className={`py-1.5 pr-3 font-extrabold ${c.align === 'right' ? 'text-right' : ''}`}
-                  >
-                    <button type="button" onClick={() => toggleSort(c.key)} className="uppercase tracking-wider hover:text-header-purple">
-                      {c.label}
-                      {active ? (sort.dir === 'asc' ? ' ▲' : ' ▼') : ''}
-                    </button>
-                  </th>
-                )
-              })}
-              <th className="py-1.5 pr-3 font-extrabold">Boost reason</th>
-              <th className="py-1.5 pr-3 font-extrabold" />
-              <th className="py-1.5 font-extrabold" />
-            </tr>
-          </thead>
-          <tbody>
-            {rows.slice(0, visible).map((run) => {
-              const open = expanded === run.id
-              return (
-                <Fragment key={run.id}>
-                  <tr className={`border-t border-header-purple/10 ${open ? 'bg-light-orange' : 'hover:bg-bg-beige/40'}`}>
-                    <td className="py-1.5 pr-3 whitespace-nowrap text-header-purple/70">{relativeTime(run.createdAt)}</td>
-                    <td className="py-1.5 pr-3 font-semibold">{getProduct(run.productId).name}</td>
-                    <td className="py-1.5 pr-3">{getCategory(run.categoryId).name}</td>
-                    <td className="py-1.5 pr-3">{getSeller(run.sellerId).name}</td>
-                    <td className="py-1.5 pr-3 whitespace-nowrap">
-                      {getMajorNode(run.sscId as MajorNodeId).city} → {getMajorNode(run.dscId as MajorNodeId).city}
-                    </td>
-                    <td className="py-1.5 pr-3">
-                      <span className={`font-bold ${run.outcome === 'sold' ? 'text-[#1f7a1f]' : 'text-[#a13b36]'}`}>
-                        {run.outcome === 'sold' ? 'Sold' : 'Unsold'}
-                      </span>
-                    </td>
-                    <td className="py-1.5 pr-3">{run.soldLayer ? `L${run.soldLayer}` : '—'}</td>
-                    <td className="py-1.5 pr-3 text-right tabular-nums">{run.pricePaid ? inr(run.pricePaid) : '—'}</td>
-                    <td className="py-1.5 pr-3 text-right tabular-nums">
-                      {run.discountPct !== undefined ? pct(run.discountPct, 1) : '—'}
-                    </td>
-                    <td className="py-1.5 pr-3 text-right tabular-nums">{run.avoided.km > 0 ? km(run.avoided.km) : '—'}</td>
-                    <td className="py-1.5 pr-3">{run.boostReason ? <BoostBadge reason={run.boostReason} variant="short" /> : '—'}</td>
-                    <td className="py-1.5 pr-3">
-                      {run.source === 'live' && (
-                        <Tag tone="accent">your run</Tag>
-                      )}
-                    </td>
-                    <td className="py-1.5 whitespace-nowrap text-right">
-                      <Button variant="ghost" size="sm" aria-expanded={open} onClick={() => setExpanded(open ? null : run.id)}>
-                        {open ? 'Hide trace' : 'Trace'}
-                      </Button>
-                      <Button size="sm" onClick={() => onReplay(run)}>
-                        Replay
-                      </Button>
-                    </td>
-                  </tr>
-                  {open && (
-                    <tr className="bg-light-orange">
-                      <td colSpan={colCount} className="px-3 pb-3 pt-1">
-                        <TraceTimeline trace={run.trace} />
-                      </td>
-                    </tr>
-                  )}
-                </Fragment>
-              )
-            })}
-            {rows.length === 0 && (
-              <tr>
-                <td colSpan={colCount} className="py-6 text-center text-header-purple/55">
-                  No returns match these filters.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+      <div className="return-grid">
+        {rows.slice(0, visible).map((run) => {
+          const open = expanded === run.id
+          const product = getProduct(run.productId)
+          return (
+            <Card key={run.id} className={`return-card ${open ? 'is-expanded' : ''}`}>
+              <div className="return-card-heading">
+                <img src={product.image} alt="" className="return-product-image" />
+                <div className="min-w-0 flex-1">
+                  <p className="record-eyebrow">{getCategory(run.categoryId).name}</p>
+                  <h3>{product.name}</h3>
+                  <p className="record-secondary">{getSeller(run.sellerId).name}</p>
+                </div>
+                <Tag tone={run.outcome === 'sold' ? 'success' : 'danger'}>{run.outcome === 'sold' ? 'Sold' : 'Unsold'}</Tag>
+              </div>
+              <div className="return-route" aria-label="Return route">
+                <div><span>Source</span><strong>{getMajorNode(run.sscId as MajorNodeId).city}</strong></div>
+                <span className="route-arrow" aria-hidden="true">&rarr;</span>
+                <div><span>Destination</span><strong>{getMajorNode(run.dscId as MajorNodeId).city}</strong></div>
+              </div>
+              <dl className="return-metrics">
+                <div><dt>Resale price</dt><dd>{run.pricePaid !== undefined ? inr(run.pricePaid) : '\u2014'}</dd></div>
+                <div><dt>Discount</dt><dd>{run.discountPct !== undefined ? pct(run.discountPct, 1) : '\u2014'}</dd></div>
+                <div><dt>Km avoided</dt><dd>{run.avoided.km > 0 ? km(run.avoided.km) : '\u2014'}</dd></div>
+              </dl>
+              <div className="return-context">
+                <span className="record-secondary">{relativeTime(run.createdAt)}</span>
+                {run.soldLayer && <Tag>Layer {run.soldLayer}</Tag>}
+                {run.boostReason && <BoostBadge reason={run.boostReason} variant="short" />}
+                {run.source === 'live' && <Tag tone="accent">Your run</Tag>}
+              </div>
+              <div className="return-actions">
+                <Button variant="outline" size="sm" aria-expanded={open} aria-controls={`trace-${run.id}`} onClick={() => setExpanded(open ? null : run.id)}>
+                  {open ? 'Hide trace' : 'View trace'}
+                </Button>
+                <Button size="sm" aria-label={`Replay ${product.name} return`} onClick={() => onReplay(run)}>Replay return &rarr;</Button>
+              </div>
+              {open && <section id={`trace-${run.id}`} aria-label="Decision trace" className="return-trace"><TraceTimeline trace={run.trace} /></section>}
+            </Card>
+          )
+        })}
       </div>
+      {rows.length === 0 && <Card className="history-empty"><h3>No matching returns</h3><p>Try another category or outcome to see more returns.</p></Card>}
 
       {rows.length > visible && (
         <Button variant="outline" full onClick={() => setVisible((v) => v + PAGE_SIZE)}>
           Show more ({rows.length - visible} remaining)
         </Button>
       )}
-    </Card>
+    </div>
   )
 }

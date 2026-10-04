@@ -35,10 +35,16 @@ export default function KpiGrid({ runs }: { runs: RunRecord[] }) {
   ]
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-5 gap-2.5">
-      {tiles.map((t) => (
-        <Stat key={t.label} {...t} />
-      ))}
-    </div>
+    <section className="dashboard-kpis" aria-label="Performance overview">
+      <div className="dashboard-section-heading"><h2>Performance overview</h2><span>Across all returns</span></div>
+      <div className="dashboard-primary-metrics">
+        {tiles.slice(0, 4).map((t, index) => (
+          <Stat key={t.label} className={index === 1 ? 'north-star metric-featured' : index === 3 ? 'metric-saffron' : 'metric-plum'} {...t} />
+        ))}
+      </div>
+      <div className="dashboard-secondary-metrics">
+        {tiles.slice(4).map((t) => <Stat key={t.label} {...t} />)}
+      </div>
+    </section>
   )
 }

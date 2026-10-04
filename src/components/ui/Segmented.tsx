@@ -25,7 +25,7 @@ export function Segmented<T extends string>({
     <div
       role="group"
       aria-label={ariaLabel}
-      className={cx('flex gap-1 rounded-full p-1', tone === 'dark' ? 'bg-white/10' : 'bg-bg-white shadow-card', className)}
+      className={cx('segmented flex gap-1 rounded-[16px] p-1', tone === 'dark' ? 'bg-white/10' : 'bg-bg-white shadow-card', className)}
     >
       {options.map((o) => {
         const active = o.value === value
@@ -36,10 +36,10 @@ export function Segmented<T extends string>({
             aria-pressed={active}
             onClick={() => onChange(o.value)}
             className={cx(
-              'whitespace-nowrap rounded-full text-body font-bold transition-colors',
+              'whitespace-nowrap rounded-[13px] text-body font-bold transition-colors',
               size === 'sm' ? 'px-3 py-1' : 'px-3 sm:px-3.5 py-1.5',
               active
-                ? 'bg-highlight-orange text-header-purple'
+                ? 'brand-active'
                 : tone === 'dark'
                   ? 'text-bg-white/75 hover:text-bg-white'
                   : 'text-header-purple/50 hover:text-header-purple',

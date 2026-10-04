@@ -12,9 +12,9 @@ export function Chip({ active, className, type = 'button', ...rest }: ChipProps)
       type={type}
       aria-pressed={active}
       className={cx(
-        'rounded-full border px-2.5 py-1 text-caption font-bold transition-colors',
+        'rounded-md border px-2.5 py-1 text-caption font-bold transition-colors',
         active
-          ? 'bg-highlight-orange border-highlight-orange text-header-purple'
+          ? 'brand-active border-header-purple'
           : 'bg-bg-white border-header-purple/20 text-header-purple/70 hover:text-header-purple',
         className,
       )}
@@ -26,7 +26,7 @@ export function Chip({ active, className, type = 'button', ...rest }: ChipProps)
 export type TagTone = 'accent' | 'neutral' | 'success' | 'danger'
 
 const TAG: Record<TagTone, string> = {
-  accent: 'bg-highlight-orange text-header-purple',
+  accent: 'bg-light-orange text-header-purple',
   neutral: 'bg-header-purple/10 text-header-purple/70',
   success: 'bg-[#e3f6e1] text-[#1f7a1f]',
   danger: 'bg-[#fbe4e2] text-[#a13b36]',

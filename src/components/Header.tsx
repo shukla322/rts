@@ -1,10 +1,9 @@
 import { Segmented } from './ui'
 
-export type Tab = 'home' | 'dashboard' | 'history' | 'sellers'
+export type Tab = 'home' | 'history' | 'sellers'
 
 const TABS: { value: Tab; label: string }[] = [
   { value: 'home', label: 'Home' },
-  { value: 'dashboard', label: 'Dashboard' },
   { value: 'history', label: 'RTS History' },
   { value: 'sellers', label: 'Sellers' },
 ]
@@ -15,31 +14,30 @@ interface Props {
 }
 
 /**
- * Top bar: logo at the left, title centred, screen navigation at the right.
+ * Top bar: brand and wordmark at the left, screen navigation at the right.
  * Wide screens get a single slim row; phones and tablets drop the nav to a second row.
  */
 export default function Header({ activeTab, onTabChange }: Props) {
   const logoUrl = `${import.meta.env.BASE_URL}products/meeshologo.png`
 
   return (
-    <header className="relative bg-header-purple text-bg-white px-4 py-1.5 lg:py-2 lg:px-6 shadow-card z-[1000] grid grid-cols-[auto_1fr_auto] lg:grid-cols-[1fr_auto_1fr] items-center gap-x-3 gap-y-1">
-      <img src={logoUrl} alt="Meesho" className="h-8 w-8 lg:h-9 lg:w-9 rounded-lg" />
-
-      <h1 className="font-display font-bold text-base lg:text-xl leading-tight text-center">
-        Return-to-sale (RTS) Prototype
-      </h1>
-
-      {/* Mirrors the logo's width on phones so the title stays centred; the nav takes its own row there. */}
-      <span aria-hidden className="h-8 w-8 lg:hidden" />
-      <Segmented
-        tone="dark"
-        size="sm"
-        ariaLabel="Screens"
-        options={TABS}
-        value={activeTab}
-        onChange={onTabChange}
-        className="col-span-3 justify-self-center lg:col-span-1 lg:col-start-3 lg:row-start-1 lg:justify-self-end"
-      />
+    <header className="app-header relative z-[1000] flex flex-wrap items-center justify-between gap-4 px-4 py-3 lg:px-6">
+      <div className="flex items-center gap-3">
+        <img src={logoUrl} alt="Meesho" className="h-10 w-10 rounded-xl" />
+        <div className="wordmark">
+          <p className="panel-eyebrow">Meesho &middot; Return-to-sale</p>
+          <h1 className="font-display font-extrabold text-lg leading-tight">A new route to resale<span>.</span></h1>
+        </div>
+      </div>
+      <nav aria-label="Main navigation" className="header-nav">
+        <Segmented
+          size="sm"
+          ariaLabel="Screens"
+          options={TABS}
+          value={activeTab}
+          onChange={onTabChange}
+        />
+      </nav>
     </header>
   )
 }
